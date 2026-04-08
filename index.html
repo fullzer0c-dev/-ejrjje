@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Novella Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@300;400;600&family=Crimson+Pro:ital,wght@0,200;0,300;0,400;1,200;1,300&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#08080e;--surface:#0f0f18;--surface2:#161622;--border:#252535;--border2:#353550;
+  --accent:#d4a853;--accent2:#6b9fd4;--accent3:#7ec89a;--danger:#d47070;
+  --text:#ede8df;--text2:#9a94888;--text-dim:#6a6478;--panel:rgba(8,8,18,.94);
+  --r:6px;--r2:10px;
+  /* user customizable */
+  --menu-bg:#0f0f1a;--menu-accent:#d4a853;--menu-text:#ede8df;
+  --dlg-bg:rgba(6,6,14,.9);--dlg-border:rgba(212,168,83,.3);--dlg-text:#ede8df;
+  --dlg-speaker-color:#d4a853;--dlg-font:'Crimson Pro',serif;--dlg-size:18px;
+  --sprite-pos:center;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;display:flex;flex-direction:column}
+
+/* ── TOPBAR ── */
+#topbar{display:flex;align-items:center;gap:6px;padding:7px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;z-index:200}
+#topbar .logo{font-family:'Cinzel',serif;font-size:15px;font-weight:300;color:var(--accent);letter-spacing:4px;margin-right:8px}
+.tb{background:none;border:1px solid transparent;color:var(--text-dim);padding:4px 11px;border-radius:var(--r);cursor:pointer;font-family:inherit;font-size:11px;letter-spacing:1px;transition:.15s all}
+.tb:hover{color:var(--text);border-color:var(--border2)}
+.tb.active{color:var(--accent);border-color:var(--accent);background:rgba(212,168,83,.07)}
+.spacer{flex:1}
+.run-btn{background:var(--accent);color:#1a1005;border:none;padding:5px 16px;border-radius:var(--r);cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:1px;font-weight:500;transition:.15s opacity}
+.run-btn:hover{opacity:.85}
+.export-btn{background:none;border:1px solid var(--accent2);color:var(--accent2);padding:5px 12px;border-radius:var(--r);cursor:pointer;font-family:inherit;font-size:11px;letter-spacing:1px;transition:.15s all}
+.export-btn:hover{background:rgba(107,159,212,.1)}
+
+/* ── LAYOUT ── */
+#main{display:flex;flex:1;overflow:hidden}
+
+/* ── SIDEBAR ── */
+#sidebar{width:195px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sb-sec{border-bottom:1px solid var(--border)}
+.sb-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;font-size:10px;letter-spacing:2px;color:var(--text-dim);cursor:pointer;user-select:none;transition:.12s color}
+.sb-hdr:hover{color:var(--text)}
+.sb-add{width:17px;height:17px;background:none;border:1px solid var(--border);color:var(--text-dim);border-radius:3px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;line-height:1;transition:.14s all}
+.sb-add:hover{border-color:var(--accent);color:var(--accent)}
+.sb-item{padding:5px 12px 5px 18px;cursor:pointer;color:var(--text-dim);font-size:11px;display:flex;align-items:center;gap:5px;border-left:2px solid transparent;transition:.13s all}
+.sb-item:hover{color:var(--text);background:rgba(255,255,255,.02)}
+.sb-item .sdel{margin-left:auto;opacity:0;background:none;border:none;color:var(--danger);cursor:pointer;font-size:11px;padding:0 2px;transition:.12s opacity}
+.sb-item:hover .sdel{opacity:.7}
+.sdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+
+/* ── CONTENT ── */
+#content{flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:12px}
+.tab-content{display:none;flex-direction:column;gap:12px}
+.tab-content.active{display:flex}
+.sec-title{font-family:'Cinzel',serif;font-size:19px;font-weight:300;color:var(--accent);letter-spacing:2px;font-style:normal}
+.sec-sub{font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-top:2px;margin-bottom:10px}
+.empty-msg{color:var(--text-dim);font-size:12px;letter-spacing:1px;padding:18px 0;text-align:center}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:13px 15px;display:flex;flex-direction:column;gap:9px;transition:.14s border-color}
+.card:hover{border-color:var(--border2)}
+.card-hdr{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text-dim);letter-spacing:1px}
+.card-title{color:var(--text);font-size:12px;letter-spacing:0}
+.card-actions{margin-left:auto;display:flex;gap:5px}
+.ca-btn{background:none;border:1px solid transparent;color:var(--text-dim);padding:2px 8px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:11px;transition:.12s all}
+.ca-btn:hover{color:var(--text);border-color:var(--border2)}
+.ca-btn.del:hover{color:var(--danger);border-color:var(--danger)}
+.frow{display:flex;gap:9px;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:3px;flex:1;min-width:110px}
+.field label{font-size:10px;letter-spacing:1.5px;color:var(--text-dim)}
+.field input,.field textarea,.field select{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:5px 8px;outline:none;transition:.14s border-color;width:100%}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent)}
+.field select option{background:var(--surface)}
+.field textarea{resize:vertical;min-height:55px}
+.sub-list{display:flex;flex-direction:column;gap:5px;padding-left:10px;border-left:1px solid var(--border);margin-top:3px}
+.sub-item{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.sub-item input{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:inherit;font-size:12px;padding:4px 7px;outline:none;flex:1;min-width:80px;transition:.14s border-color}
+.sub-item input:focus{border-color:var(--accent2)}
+.sub-item button{background:none;border:1px solid transparent;color:var(--text-dim);padding:3px 7px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:11px;transition:.12s all}
+.sub-item button:hover{color:var(--danger);border-color:var(--danger)}
+.add-sub{background:none;border:1px dashed var(--border);color:var(--text-dim);padding:4px 10px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:11px;margin-top:3px;align-self:flex-start;transition:.13s all;letter-spacing:.5px}
+.add-sub:hover{color:var(--accent2);border-color:var(--accent2)}
+.add-card{background:none;border:1px dashed var(--border);color:var(--text-dim);padding:9px;border-radius:var(--r2);cursor:pointer;font-family:inherit;font-size:12px;letter-spacing:.5px;transition:.14s all;width:100%}
+.add-card:hover{color:var(--accent);border-color:var(--accent)}
+
+/* ── CUTSCENE / SCENE EDITOR ── */
+.cs-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;transition:.14s border-color}
+.cs-wrap:hover{border-color:var(--border2)}
+.cs-hdr{display:flex;align-items:center;gap:8px;padding:9px 13px;cursor:pointer;user-select:none}
+.cs-chevron{font-size:9px;color:var(--text-dim);transition:.2s transform;flex-shrink:0}
+.cs-wrap.open .cs-chevron{transform:rotate(90deg)}
+.cs-nameinput{background:none;border:none;color:var(--text);font-family:inherit;font-size:12px;flex:1;outline:none;cursor:text}
+.cs-meta{font-size:10px;color:var(--text-dim);flex-shrink:0}
+.cs-acts{display:flex;gap:5px;flex-shrink:0}
+.cs-acts button{background:none;border:1px solid transparent;color:var(--text-dim);padding:2px 8px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:11px;transition:.12s all}
+.cs-acts button:hover{color:var(--accent);border-color:var(--accent)}
+.cs-acts button.del:hover{color:var(--danger);border-color:var(--danger)}
+.cs-body{display:none;border-top:1px solid var(--border);padding:10px 13px;display:none;flex-direction:column;gap:6px}
+.cs-wrap.open .cs-body{display:flex}
+.cs-type-badge{display:inline-block;font-size:9px;letter-spacing:2px;padding:2px 6px;border-radius:3px;margin-bottom:6px}
+
+/* dialog row */
+.dl-row{display:flex;gap:8px;align-items:flex-start;background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:var(--r);padding:8px 11px;transition:.13s border-color}
+.dl-row:hover{border-color:var(--border2)}
+.dl-num{font-size:10px;color:var(--text-dim);padding-top:6px;min-width:20px}
+.dl-fields{flex:1;display:flex;flex-direction:column;gap:5px}
+.dl-row-inner{display:flex;gap:7px;flex-wrap:wrap}
+.dl-row-inner .field{min-width:90px}
+.dl-del{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:14px;padding:1px 3px;transition:.12s color;align-self:flex-start;flex-shrink:0}
+.dl-del:hover{color:var(--danger)}
+
+/* choice block */
+.choice-block{background:rgba(107,159,212,.05);border:1px solid rgba(107,159,212,.18);border-radius:var(--r);padding:8px 11px}
+.choice-lbl{font-size:10px;letter-spacing:2px;color:var(--accent2);margin-bottom:7px}
+.choice-opt{display:flex;gap:7px;margin-bottom:5px;align-items:center;flex-wrap:wrap}
+.choice-opt input{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:inherit;font-size:12px;padding:4px 8px;outline:none;flex:1;transition:.13s border-color}
+.choice-opt input:focus{border-color:var(--accent2)}
+.choice-opt select{background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:inherit;font-size:11px;padding:4px 7px;outline:none;flex:1;min-width:120px}
+.choice-opt .odl{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:13px;transition:.12s color}
+.choice-opt .odl:hover{color:var(--danger)}
+
+/* ending block */
+.ending-badge{background:rgba(212,168,83,.12);border:1px solid rgba(212,168,83,.3);border-radius:var(--r);padding:7px 11px;font-size:11px;color:var(--accent);letter-spacing:1px}
+
+/* cutscene animation rows */
+.anim-row{display:flex;gap:7px;align-items:center;background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:var(--r);padding:7px 11px;flex-wrap:wrap}
+.anim-row .field{min-width:100px}
+.anim-badge{display:inline-block;background:rgba(126,200,154,.1);border:1px solid rgba(126,200,154,.25);color:var(--accent3);font-size:10px;letter-spacing:1.5px;padding:2px 7px;border-radius:3px;flex-shrink:0}
+
+/* add row buttons */
+.add-row-bar{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+.add-row-bar button{background:none;border:1px dashed var(--border);color:var(--text-dim);padding:5px 12px;border-radius:var(--r);cursor:pointer;font-family:inherit;font-size:11px;flex:1;min-width:100px;transition:.14s all;letter-spacing:.5px}
+.add-row-bar button:hover{color:var(--text);border-color:var(--border2)}
+.add-row-bar button.b-dialog:hover{color:var(--accent);border-color:var(--accent)}
+.add-row-bar button.b-choice:hover{color:var(--accent2);border-color:var(--accent2)}
+.add-row-bar button.b-ending:hover{color:var(--accent);border-color:var(--accent)}
+.add-row-bar button.b-anim:hover{color:var(--accent3);border-color:var(--accent3)}
+
+/* ── MENU EDITOR ── */
+.menu-preview{width:100%;height:180px;border-radius:var(--r2);overflow:hidden;border:1px solid var(--border);position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;margin-bottom:8px}
+.menu-preview .mp-title{font-family:'Cinzel',serif;font-size:24px;font-weight:300;letter-spacing:6px;color:var(--menu-accent)}
+.menu-preview .mp-btn{background:none;border:1px solid var(--menu-accent);color:var(--menu-text);padding:6px 28px;border-radius:4px;font-size:13px;letter-spacing:2px;opacity:.9;pointer-events:none}
+
+/* ── CUSTOMIZATION ── */
+.color-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.color-field{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:5px 9px}
+.color-field label{font-size:10px;letter-spacing:1px;color:var(--text-dim);white-space:nowrap}
+.color-field input[type=color]{width:28px;height:22px;border:none;background:none;cursor:pointer;border-radius:3px;padding:0}
+.slider-field{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:5px 9px;flex:1;min-width:160px}
+.slider-field label{font-size:10px;letter-spacing:1px;color:var(--text-dim);white-space:nowrap}
+.slider-field input[type=range]{flex:1;accent-color:var(--accent)}
+.radio-group{display:flex;gap:6px;flex-wrap:wrap}
+.radio-opt{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:5px 12px;cursor:pointer;font-size:11px;color:var(--text-dim);letter-spacing:.5px;transition:.13s all;user-select:none}
+.radio-opt.active{color:var(--accent);border-color:var(--accent);background:rgba(212,168,83,.07)}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:22px;right:22px;background:var(--surface);border:1px solid var(--accent);color:var(--accent);padding:7px 15px;border-radius:var(--r);font-size:12px;letter-spacing:1px;opacity:0;transform:translateY(8px);transition:.18s all;pointer-events:none;z-index:9999}
+#toast.show{opacity:1;transform:translateY(0)}
+
+/* ── MODAL ── */
+#modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:5000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+#modal-overlay.show{display:flex}
+#modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r2);padding:22px 24px;max-width:540px;width:90%;max-height:80vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+#modal-box h2{font-family:'Cinzel',serif;font-size:18px;font-weight:300;color:var(--accent);letter-spacing:2px}
+#modal-box pre{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:12px;font-size:11px;color:var(--text-dim);overflow-x:auto;white-space:pre-wrap;word-break:break-all}
+#modal-box .modal-actions{display:flex;gap:8px;justify-content:flex-end}
+#modal-box .modal-actions button{background:none;border:1px solid var(--border2);color:var(--text-dim);padding:5px 14px;border-radius:var(--r);cursor:pointer;font-family:inherit;font-size:12px;transition:.13s all}
+#modal-box .modal-actions button:hover{color:var(--text);border-color:var(--text)}
+#modal-box .modal-actions button.primary{border-color:var(--accent);color:var(--accent)}
+#modal-box .modal-actions button.primary:hover{background:rgba(212,168,83,.12)}
+
+/* ══════════════════════════════════════════════
+   P L A Y E R
+══════════════════════════════════════════════ */
+#player{position:fixed;inset:0;z-index:3000;display:none;flex-direction:column;background:#000}
+#player.visible{display:flex}
+
+#pl-bg{position:absolute;inset:0;background-size:cover;background-position:center;transition:.5s background-image;will-change:background-image}
+#pl-bg-color{position:absolute;inset:0;background:#000;transition:.4s opacity;pointer-events:none}
+#pl-bg-overlay{position:absolute;inset:0;transition:.4s opacity;pointer-events:none}
+
+/* sprites layer */
+#pl-sprites{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:flex-end;pointer-events:none}
+.pl-sprite-wrap{position:absolute;bottom:0;transition:.3s all}
+.pl-sprite-wrap img{max-height:80vh;max-width:35vw;object-fit:contain;display:block}
+.pl-sprite-wrap.pos-left{left:5%}
+.pl-sprite-wrap.pos-center{left:50%;transform:translateX(-50%)}
+.pl-sprite-wrap.pos-right{right:5%}
+.pl-sprite-wrap.pos-left2{left:15%}
+.pl-sprite-wrap.pos-right2{right:15%}
+
+/* cutscene canvas */
+#pl-cutscene{position:absolute;inset:0;pointer-events:none;display:none}
+#pl-cutscene.active{display:block}
+
+/* ui top */
+#pl-topbar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:flex-end;gap:7px;padding:13px 18px;z-index:10}
+.p-btn{background:rgba(8,8,18,.75);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.65);padding:4px 11px;border-radius:4px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;transition:.13s all;backdrop-filter:blur(6px)}
+.p-btn:hover{background:rgba(212,168,83,.15);border-color:var(--accent);color:var(--accent)}
+.p-btn.on{background:rgba(212,168,83,.2);border-color:var(--accent);color:var(--accent)}
+
+/* menu screen */
+#pl-menu{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:var(--menu-bg);transition:.3s opacity}
+#pl-menu .pl-menu-title{font-family:'Cinzel',serif;font-size:36px;font-weight:300;color:var(--menu-accent);letter-spacing:8px;text-align:center;text-shadow:0 0 40px rgba(212,168,83,.3)}
+#pl-menu .pl-menu-sub{font-size:12px;color:rgba(255,255,255,.3);letter-spacing:3px;margin-top:-10px}
+.pl-menu-btn{background:none;border:1px solid var(--menu-accent);color:var(--menu-text);padding:10px 48px;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:14px;letter-spacing:3px;transition:.18s all;opacity:.85}
+.pl-menu-btn:hover{background:rgba(212,168,83,.12);opacity:1;transform:scale(1.02)}
+
+/* dialog */
+#pl-dialog{position:absolute;left:30px;right:30px;bottom:25px;background:var(--dlg-bg);border:1px solid var(--dlg-border);border-radius:10px;padding:16px 22px 14px;cursor:pointer;backdrop-filter:blur(10px);transition:.18s border-color}
+#pl-dialog:hover{border-color:rgba(212,168,83,.55)}
+#pl-speaker{font-family:'Cinzel',serif;font-size:17px;font-weight:300;color:var(--dlg-speaker-color);letter-spacing:2px;margin-bottom:7px}
+#pl-text{font-family:var(--dlg-font);font-size:var(--dlg-size);line-height:1.7;color:var(--dlg-text);min-height:52px}
+#pl-continue{position:absolute;bottom:11px;right:18px;font-size:16px;color:var(--accent);opacity:0;animation:blink 1.3s infinite}
+@keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
+
+/* choices */
+#pl-choices{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:11px;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);z-index:15}
+#pl-choices.show{display:flex}
+.ch-btn{background:rgba(8,8,18,.88);border:1px solid rgba(212,168,83,.28);color:var(--text);padding:12px 40px;border-radius:7px;cursor:pointer;font-family:'Cinzel',serif;font-size:16px;font-weight:300;letter-spacing:1.5px;transition:.17s all;min-width:300px;text-align:center;backdrop-filter:blur(6px)}
+.ch-btn:hover{background:rgba(212,168,83,.14);border-color:var(--accent);color:var(--accent);transform:scale(1.02)}
+
+/* ending screen */
+#pl-ending{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:16}
+#pl-ending.show{display:flex}
+#pl-ending .end-label{font-size:11px;letter-spacing:4px;color:var(--text-dim)}
+#pl-ending .end-title{font-family:'Cinzel',serif;font-size:32px;font-weight:300;color:var(--accent);letter-spacing:4px;text-align:center}
+#pl-ending .end-text{font-family:'Crimson Pro',serif;font-size:16px;color:var(--text-dim);text-align:center;max-width:500px;line-height:1.6}
+#pl-ending .end-btn{background:none;border:1px solid var(--accent);color:var(--accent);padding:10px 40px;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;transition:.15s all;margin-top:8px}
+#pl-ending .end-btn:hover{background:rgba(212,168,83,.12)}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <span class="logo">NOVELLA</span>
+  <button class="tb active" onclick="switchTab('backgrounds')">Фоны</button>
+  <button class="tb" onclick="switchTab('music')">Музыка</button>
+  <button class="tb" onclick="switchTab('characters')">Персонажи</button>
+  <button class="tb" onclick="switchTab('scenes')">Сцены</button>
+  <button class="tb" onclick="switchTab('menu')">Меню</button>
+  <button class="tb" onclick="switchTab('customize')">Кастом</button>
+  <div class="spacer"></div>
+  <button class="export-btn" onclick="openExport()">⬇ Экспорт</button>
+  <button class="run-btn" onclick="runNovel()">▶ Запустить</button>
+</div>
+
+<div id="main">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sb-sec">
+      <div class="sb-hdr" onclick="switchTab('backgrounds')">
+        <span>ФОНЫ</span><button class="sb-add" onclick="event.stopPropagation();addBg()">+</button>
+      </div>
+      <div id="sb-bg"></div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-hdr" onclick="switchTab('music')">
+        <span>МУЗЫКА</span><button class="sb-add" onclick="event.stopPropagation();addMusic()">+</button>
+      </div>
+      <div id="sb-mus"></div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-hdr" onclick="switchTab('characters')">
+        <span>ПЕРСОНАЖИ</span><button class="sb-add" onclick="event.stopPropagation();addChar()">+</button>
+      </div>
+      <div id="sb-char"></div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-hdr" onclick="switchTab('scenes')">
+        <span>СЦЕНЫ</span><button class="sb-add" onclick="event.stopPropagation();addScene('dialog')">+</button>
+      </div>
+      <div id="sb-sc"></div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content">
+
+    <!-- BACKGROUNDS -->
+    <div class="tab-content active" id="tab-backgrounds">
+      <div><div class="sec-title">Фоны</div><div class="sec-sub">BACKGROUNDS / СПИСОК</div></div>
+      <div id="bg-list"></div>
+      <button class="add-card" onclick="addBg()">+ добавить фон</button>
+    </div>
+
+    <!-- MUSIC -->
+    <div class="tab-content" id="tab-music">
+      <div><div class="sec-title">Музыка</div><div class="sec-sub">MUSIC TRACKS / СПИСОК</div></div>
+      <div id="mus-list"></div>
+      <button class="add-card" onclick="addMusic()">+ добавить трек</button>
+    </div>
+
+    <!-- CHARACTERS -->
+    <div class="tab-content" id="tab-characters">
+      <div><div class="sec-title">Персонажи</div><div class="sec-sub">CHARACTERS / СПИСОК</div></div>
+      <div id="char-list"></div>
+      <button class="add-card" onclick="addChar()">+ добавить персонажа</button>
+    </div>
+
+    <!-- SCENES -->
+    <div class="tab-content" id="tab-scenes">
+      <div><div class="sec-title">Сцены</div><div class="sec-sub">SCENES / СЦЕНЫ И КАТСЦЕНЫ</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+        <button class="add-card" style="flex:1" onclick="addScene('dialog')">+ диалоговая сцена</button>
+        <button class="add-card" style="flex:1;border-color:rgba(126,200,154,.3);color:var(--accent3)" onclick="addScene('cutscene')">+ анимированная катсцена</button>
+      </div>
+      <div id="scene-list"></div>
+    </div>
+
+    <!-- MENU -->
+    <div class="tab-content" id="tab-menu">
+      <div><div class="sec-title">Меню</div><div class="sec-sub">ГЛАВНОЕ МЕНЮ НОВЕЛЛЫ</div></div>
+      <div class="card">
+        <div class="card-hdr"><span style="color:var(--accent)">PREVIEW</span></div>
+        <div class="menu-preview" id="menu-preview">
+          <div class="mp-title" id="mp-title">Название новеллы</div>
+          <button class="mp-btn">НАЧАТЬ</button>
+          <button class="mp-btn" style="opacity:.5">НАСТРОЙКИ</button>
+        </div>
+        <div class="frow">
+          <div class="field"><label>НАЗВАНИЕ</label>
+            <input id="menu-title-input" value="Название новеллы" oninput="updateMenuPreview()">
+          </div>
+          <div class="field"><label>ПОДЗАГОЛОВОК</label>
+            <input id="menu-sub-input" value="" placeholder="subtitle / subtitle">
+          </div>
+        </div>
+        <div class="frow">
+          <div class="field"><label>ФОН МЕНЮ (URL)</label>
+            <input id="menu-bg-input" value="" placeholder="https://... или оставь пустым" oninput="updateMenuPreview()">
+          </div>
+          <div class="field"><label>ЦВЕТ ФОНа МЕНЮ</label>
+            <input id="menu-bg-color-input" type="color" value="#0f0f1a" oninput="applyMenuBgColor()" style="height:32px">
+          </div>
+        </div>
+        <div class="frow">
+          <div class="color-field">
+            <label>АКЦЕНТ МЕНЮ</label>
+            <input type="color" value="#d4a853" oninput="applyMenuAccent(this.value)">
+          </div>
+          <div class="color-field">
+            <label>ТЕКСТ МЕНЮ</label>
+            <input type="color" value="#ede8df" oninput="document.documentElement.style.setProperty('--menu-text',this.value)">
+          </div>
+        </div>
+        <div class="frow">
+          <div class="field"><label>ПЕРВАЯ СЦЕНА (для кнопки НАЧАТЬ)</label>
+            <select id="menu-start-scene">
+              <option value="">— выбери сцену —</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CUSTOMIZE -->
+    <div class="tab-content" id="tab-customize">
+      <div><div class="sec-title">Кастомизация</div><div class="sec-sub">PLAYER / VISUAL STYLE</div></div>
+
+      <div class="card">
+        <div class="card-hdr"><span style="color:var(--accent2)">ДИАЛОГОВОЕ ОКНО</span></div>
+        <div class="color-row">
+          <div class="color-field"><label>ФОН ОКНА</label><input type="color" value="#060609" oninput="setDlgVar('--dlg-bg',this.value+'e6')"></div>
+          <div class="color-field"><label>РАМКА</label><input type="color" value="#d4a853" oninput="setDlgBorder(this.value)"></div>
+          <div class="color-field"><label>ТЕКСТ</label><input type="color" value="#ede8df" oninput="setVar('--dlg-text',this.value)"></div>
+          <div class="color-field"><label>ИМЯ СПИКЕРА</label><input type="color" value="#d4a853" oninput="setVar('--dlg-speaker-color',this.value)"></div>
+        </div>
+        <div class="frow" style="margin-top:4px">
+          <div class="field"><label>ШРИФТ ДИАЛОГА</label>
+            <select onchange="setVar('--dlg-font',this.value)">
+              <option value="'Crimson Pro',serif">Crimson Pro (по умолч.)</option>
+              <option value="'Cinzel',serif">Cinzel</option>
+              <option value="'JetBrains Mono',monospace">JetBrains Mono</option>
+              <option value="Georgia,serif">Georgia</option>
+              <option value="'Times New Roman',serif">Times New Roman</option>
+            </select>
+          </div>
+          <div class="field"><label>РАЗМЕР ТЕКСТА</label>
+            <select onchange="setVar('--dlg-size',this.value)">
+              <option value="15px">Маленький (15px)</option>
+              <option value="18px" selected>Средний (18px)</option>
+              <option value="21px">Большой (21px)</option>
+              <option value="24px">Очень большой (24px)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><span style="color:var(--accent3)">ПОЗИЦИЯ СПРАЙТОВ (по умолч.)</span></div>
+        <div class="radio-group" id="sprite-pos-group">
+          <div class="radio-opt active" onclick="setSpritePos('center',this)">По центру</div>
+          <div class="radio-opt" onclick="setSpritePos('left',this)">Слева</div>
+          <div class="radio-opt" onclick="setSpritePos('right',this)">Справа</div>
+        </div>
+        <div class="field" style="margin-top:8px"><label>ПРИМЕЧАНИЕ</label>
+          <div style="font-size:11px;color:var(--text-dim);padding:5px 0">В каждой строке диалога можно указать отдельную позицию спрайта. Несколько спрайтов поддерживаются через поле "Доп. спрайты".</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><span style="color:var(--danger)">ОВЕРЛЕЙ ПОВЕРХ ФОНА</span></div>
+        <div class="color-row">
+          <div class="color-field"><label>ЦВЕТ ОВЕРЛЕЯ</label><input type="color" id="overlay-color" value="#000000" oninput="applyOverlay()"></div>
+          <div class="slider-field"><label>ПРОЗРАЧНОСТЬ</label><input type="range" id="overlay-opacity" min="0" max="90" value="0" oninput="applyOverlay()"><span id="overlay-val" style="font-size:11px;color:var(--text-dim);min-width:30px">0%</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr"><span style="color:var(--accent)">ЦВЕТА РЕДАКТОРА</span></div>
+        <div class="color-row">
+          <div class="color-field"><label>АКЦЕНТ</label><input type="color" value="#d4a853" oninput="setVar('--accent',this.value)"></div>
+          <div class="color-field"><label>ФОН РЕДАКТОРА</label><input type="color" value="#08080e" oninput="setVar('--bg',this.value)"></div>
+          <div class="color-field"><label>ПОВЕРХНОСТЬ</label><input type="color" value="#0f0f18" oninput="setVar('--surface',this.value)"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- MODAL -->
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div id="modal-box">
+    <h2 id="modal-title">Экспорт</h2>
+    <div id="modal-body"></div>
+    <div class="modal-actions">
+      <button onclick="closeModalDirect()">Закрыть</button>
+      <button class="primary" id="modal-primary-btn" onclick="">Скопировать</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PLAYER
+════════════════════════════════════════ -->
+<div id="player">
+  <div id="pl-bg"></div>
+  <div id="pl-bg-color"></div>
+  <div id="pl-bg-overlay"></div>
+  <canvas id="pl-cutscene"></canvas>
+  <div id="pl-sprites"></div>
+
+  <!-- MENU SCREEN -->
+  <div id="pl-menu">
+    <div class="pl-menu-title" id="pl-menu-title">Название</div>
+    <div class="pl-menu-sub" id="pl-menu-sub"></div>
+    <button class="pl-menu-btn" id="pl-start-btn" onclick="startFromMenu()">НАЧАТЬ</button>
+    <button class="pl-menu-btn" style="opacity:.5;font-size:12px;padding:7px 40px" onclick="closePlayer()">ВЫЙТИ</button>
+  </div>
+
+  <!-- TOPBAR -->
+  <div id="pl-topbar">
+    <button class="p-btn" id="btn-auto" onclick="toggleAuto()">авто</button>
+    <button class="p-btn" onclick="skipDialog()">пропустить</button>
+    <button class="p-btn" onclick="closePlayer()">✕</button>
+  </div>
+
+  <!-- DIALOG -->
+  <div id="pl-dialog" onclick="advanceDialog()" style="display:none">
+    <div id="pl-speaker"></div>
+    <div id="pl-text"></div>
+    <div id="pl-continue">▾</div>
+  </div>
+
+  <!-- CHOICES -->
+  <div id="pl-choices"></div>
+
+  <!-- ENDING -->
+  <div id="pl-ending">
+    <div class="end-label">КОНЕЦ</div>
+    <div class="end-title" id="end-title">—</div>
+    <div class="end-text" id="end-text"></div>
+    <button class="end-btn" onclick="closePlayer()">В главное меню</button>
+  </div>
+</div>
+
+<!-- ════════ SCRIPT ════════ -->
+<script>
+// ═══ STATE ═══════════════════════════════════════════
+let S = {
+  backgrounds:[],music:[],characters:[],scenes:[],
+  menu:{ title:'Название новеллы', sub:'', bgUrl:'', bgColor:'#0f0f1a', accentColor:'#d4a853', startScene:'' },
+  custom:{}
+};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+function save(){try{localStorage.setItem('nv3',JSON.stringify(S))}catch(e){}}
+function load(){try{const d=localStorage.getItem('nv3');if(d){S=JSON.parse(d)}}catch(e){}}
+
+// ═══ TABS ════════════════════════════════════════════
+let curTab='backgrounds';
+function switchTab(t){
+  curTab=t;
+  document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tb').forEach(b=>{
+    if((t==='backgrounds'&&b.textContent.includes('Фон'))||(t==='music'&&b.textContent.includes('Муз'))||
+       (t==='characters'&&b.textContent.includes('Пер'))||(t==='scenes'&&b.textContent.includes('Сцен'))||
+       (t==='menu'&&b.textContent.includes('Мен'))||(t==='customize'&&b.textContent.includes('Кас')))
+      b.classList.add('active');
+  });
+  if(t==='menu') populateMenuSceneSelect();
+  renderAll();
+}
+
+// ═══ TOAST ═══════════════════════════════════════════
+function toast(m,dur=2000){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur)}
+
+// ═══ RENDER ══════════════════════════════════════════
+function renderAll(){renderBg();renderMus();renderChars();renderScenes();renderSidebar()}
+
+function renderSidebar(){
+  const mk=(list,col,tab)=>list.map((_,i)=>`<div class="sb-item" onclick="switchTab('${tab}')"><span class="sdot" style="background:${col}"></span><span>${list[i].name||'#'+(i+1)}</span></div>`).join('');
+  document.getElementById('sb-bg').innerHTML=mk(S.backgrounds,'var(--accent2)','backgrounds');
+  document.getElementById('sb-mus').innerHTML=mk(S.music,'#9a7ec8','music');
+  document.getElementById('sb-char').innerHTML=mk(S.characters,'var(--accent3)','characters');
+  document.getElementById('sb-sc').innerHTML=mk(S.scenes,'var(--accent)','scenes');
+}
+
+// ─── BACKGROUNDS ─────────────────────────────────────
+function addBg(){S.backgrounds.push({id:uid(),name:'',link:''});save();renderAll();switchTab('backgrounds')}
+function renderBg(){
+  const el=document.getElementById('bg-list');
+  if(!S.backgrounds.length){el.innerHTML='<div class="empty-msg">— нет фонов —</div>';return}
+  el.innerHTML=S.backgrounds.map((b,i)=>`
+  <div class="card" style="margin-bottom:8px">
+    <div class="card-hdr"><span style="color:var(--accent2)">BG</span><span class="card-title">${b.name||'Без названия'}</span>
+      <div class="card-actions"><button class="ca-btn del" onclick="delItem('backgrounds','${b.id}')">удалить</button></div></div>
+    <div class="frow">
+      <div class="field"><label>NAME</label><input value="${esc(b.name)}" oninput="S.backgrounds[${i}].name=this.value;save();renderSidebar()" placeholder="e.g. Classroom"></div>
+      <div class="field" style="flex:2"><label>URL</label><input value="${esc(b.link)}" oninput="S.backgrounds[${i}].link=this.value;save()" placeholder="https://..."></div>
+    </div>
+    ${b.link?`<div style="height:55px;border-radius:4px;background:url('${esc(b.link)}') center/cover;border:1px solid var(--border);opacity:.65"></div>`:''}
+  </div>`).join('')}
+
+// ─── MUSIC ───────────────────────────────────────────
+function addMusic(){S.music.push({id:uid(),name:'',link:''});save();renderAll();switchTab('music')}
+function renderMus(){
+  const el=document.getElementById('mus-list');
+  if(!S.music.length){el.innerHTML='<div class="empty-msg">— нет треков —</div>';return}
+  el.innerHTML=S.music.map((m,i)=>`
+  <div class="card" style="margin-bottom:8px">
+    <div class="card-hdr"><span style="color:#9a7ec8">MUS</span><span class="card-title">${m.name||'Без названия'}</span>
+      <div class="card-actions"><button class="ca-btn del" onclick="delItem('music','${m.id}')">удалить</button></div></div>
+    <div class="frow">
+      <div class="field"><label>NAME</label><input value="${esc(m.name)}" oninput="S.music[${i}].name=this.value;save();renderSidebar()" placeholder="e.g. Rainy Day"></div>
+      <div class="field" style="flex:2"><label>URL (.mp3 / .ogg / прямая ссылка)</label><input value="${esc(m.link)}" oninput="S.music[${i}].link=this.value;save()" placeholder="https://..."></div>
+    </div>
+    ${m.link?`<button onclick="testAudio('${esc(m.link)}')" style="background:none;border:1px solid var(--border);color:var(--text-dim);padding:3px 10px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:11px;align-self:flex-start;transition:.13s all" onmouseover="this.style.borderColor='var(--accent3)';this.style.color='var(--accent3)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-dim)'">▶ тест</button>`:''}
+  </div>`).join('')}
+
+let testAudioEl=null;
+function testAudio(url){
+  if(testAudioEl){testAudioEl.pause();testAudioEl=null}
+  testAudioEl=new Audio(url);
+  testAudioEl.volume=0.5;
+  testAudioEl.play().then(()=>toast('▶ воспроизведение...')).catch(e=>toast('⚠ не удалось: '+e.message));
+  setTimeout(()=>{if(testAudioEl){testAudioEl.pause();testAudioEl=null}},8000);
+}
+
+// ─── CHARACTERS ──────────────────────────────────────
+function addChar(){S.characters.push({id:uid(),name:'',color:'#d4a853',sprites:[]});save();renderAll();switchTab('characters')}
+function renderChars(){
+  const el=document.getElementById('char-list');
+  if(!S.characters.length){el.innerHTML='<div class="empty-msg">— нет персонажей —</div>';return}
+  el.innerHTML=S.characters.map((ch,ci)=>`
+  <div class="card" style="margin-bottom:8px">
+    <div class="card-hdr"><span style="color:var(--accent3)">CHAR</span><span class="card-title">${ch.name||'Без имени'}</span>
+      <div class="card-actions"><button class="ca-btn del" onclick="delItem('characters','${ch.id}')">удалить</button></div></div>
+    <div class="frow">
+      <div class="field"><label>NAME</label><input value="${esc(ch.name)}" oninput="S.characters[${ci}].name=this.value;save();renderSidebar()" placeholder="Персонаж"></div>
+      <div class="color-field" style="align-self:flex-end;margin-bottom:0"><label>ЦВЕТ ИМЕНИ</label><input type="color" value="${ch.color||'#d4a853'}" oninput="S.characters[${ci}].color=this.value;save()"></div>
+    </div>
+    <div class="sub-list">
+      ${ch.sprites.map((sp,si)=>`
+      <div class="sub-item">
+        <input value="${esc(sp.name)}" oninput="S.characters[${ci}].sprites[${si}].name=this.value;save()" placeholder="Sprite name (e.g. Sad)">
+        <input value="${esc(sp.link)}" oninput="S.characters[${ci}].sprites[${si}].link=this.value;save()" placeholder="URL картинки">
+        <button onclick="delSprite('${ch.id}','${sp.id}')">✕</button>
+      </div>`).join('')}
+    </div>
+    <button class="add-sub" onclick="addSprite('${ch.id}')">+ спрайт</button>
+  </div>`).join('')}
+
+function addSprite(cid){const c=S.characters.find(x=>x.id===cid);if(c){c.sprites.push({id:uid(),name:'',link:''});save();renderChars()}}
+function delSprite(cid,sid){const c=S.characters.find(x=>x.id===cid);if(c){c.sprites=c.sprites.filter(s=>s.id!==sid);save();renderChars()}}
+
+// ─── UTIL ─────────────────────────────────────────────
+function delItem(list,id){S[list]=S[list].filter(x=>x.id!==id);save();renderAll()}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function getNames(list){return S[list].map(x=>x.name).filter(Boolean)}
+function bgOpts(val){return['<option value="">— без изм. —</option>',...S.backgrounds.map(b=>`<option value="${esc(b.name)}" ${val===b.name?'selected':''}>${esc(b.name)}</option>`)].join('')}
+function musOpts(val){return['<option value="">— без изм. —</option>',...S.music.map(m=>`<option value="${esc(m.name)}" ${val===m.name?'selected':''}>${esc(m.name)}</option>`)].join('')}
+function charOpts(val){return['<option value="">— нарратор —</option>',...S.characters.map(c=>`<option value="${esc(c.name)}" ${val===c.name?'selected':''}>${esc(c.name)}</option>`)].join('')}
+function spriteOpts(charName,val){
+  const c=S.characters.find(x=>x.name===charName);
+  if(!c||!c.sprites.length) return '<option value="">— нет спрайтов —</option>';
+  return['<option value="">— нет —</option>',...c.sprites.map(s=>`<option value="${esc(s.name)}" ${val===s.name?'selected':''}>${esc(s.name)}</option>`)].join('')}
+function sceneOpts(val){return['<option value="">— нет перехода —</option>',...S.scenes.map(sc=>`<option value="${esc(sc.id)}" ${val===sc.id?'selected':''}>${esc(sc.name)}</option>`)].join('')}
+const POS=['center','left','right','left2','right2'];
+function posOpts(val){return POS.map(p=>`<option value="${p}" ${val===p?'selected':''}>${p}</option>`).join('')}
+
+// ─── SCENES ──────────────────────────────────────────
+function addScene(type){
+  S.scenes.push({id:uid(),name:type==='cutscene'?'Катсцена':'Новая сцена',type:type||'dialog',open:true,rows:[]});
+  save();renderAll();switchTab('scenes');
+}
+function delScene(id){S.scenes=S.scenes.filter(x=>x.id!==id);save();renderAll()}
+function toggleScene(id){const s=S.scenes.find(x=>x.id===id);if(s){s.open=!s.open;renderScenes()}}
+
+// row factories
+function mkDialogRow(scId){return{id:uid(),type:'dialog',speaker:'',sprite:'',sprite2:'',sprite2pos:'right',spritePos:'center',bg:'',music:'',text:''}}
+function mkChoiceRow(scId){return{id:uid(),type:'choice',choices:[]}}
+function mkEndingRow(){return{id:uid(),type:'ending',title:'Конец',text:'',endType:'end'}}
+function mkAnimRow(){return{id:uid(),type:'anim',effect:'fade',duration:1000,color:'#000000',text:''}}
+
+function addRow(scId,factory){
+  const sc=S.scenes.find(x=>x.id===scId);if(!sc)return;
+  sc.rows.push(factory(scId));save();renderScenes();
+}
+function addChoiceRow(scId){
+  const sc=S.scenes.find(x=>x.id===scId);if(!sc)return;
+  sc.rows.push({id:uid(),type:'choice',choices:[{id:uid(),text:'Вариант 1',gotoScene:''},{id:uid(),text:'Вариант 2',gotoScene:''}]});
+  save();renderScenes();
+}
+function delRow(scId,rowId){
+  const sc=S.scenes.find(x=>x.id===scId);if(!sc)return;
+  sc.rows=sc.rows.filter(r=>r.id!==rowId);save();renderScenes();
+}
+function addChoiceOpt(scId,rowId){
+  const sc=S.scenes.find(x=>x.id===scId);if(!sc)return;
+  const r=sc.rows.find(x=>x.id===rowId);if(r)r.choices.push({id:uid(),text:'',gotoScene:''});
+  save();renderScenes();
+}
+function delChoiceOpt(scId,rowId,cid){
+  const sc=S.scenes.find(x=>x.id===scId);if(!sc)return;
+  const r=sc.rows.find(x=>x.id===rowId);if(r)r.choices=r.choices.filter(x=>x.id!==cid);
+  save();renderScenes();
+}
+
+function renderScenes(){
+  const el=document.getElementById('scene-list');
+  if(!S.scenes.length){el.innerHTML='<div class="empty-msg">— нет сцен —</div>';return}
+  el.innerHTML=S.scenes.map((sc,si)=>{
+    const badge=sc.type==='cutscene'
+      ?`<span style="background:rgba(126,200,154,.1);border:1px solid rgba(126,200,154,.25);color:var(--accent3);font-size:9px;letter-spacing:2px;padding:2px 6px;border-radius:3px">CUTSCENE</span>`
+      :`<span style="background:rgba(212,168,83,.08);border:1px solid rgba(212,168,83,.2);color:var(--accent);font-size:9px;letter-spacing:2px;padding:2px 6px;border-radius:3px">DIALOG</span>`;
+    return`<div class="cs-wrap ${sc.open?'open':''}" style="margin-bottom:8px">
+      <div class="cs-hdr" onclick="toggleScene('${sc.id}')">
+        <span class="cs-chevron">▶</span>
+        ${badge}
+        <input class="cs-nameinput" onclick="event.stopPropagation()" value="${esc(sc.name)}" oninput="S.scenes[${si}].name=this.value;save();renderSidebar()">
+        <span class="cs-meta">${sc.rows.length} строк</span>
+        <div class="cs-acts">
+          <button onclick="event.stopPropagation();runScene(${si})">▶</button>
+          <button class="del" onclick="event.stopPropagation();delScene('${sc.id}')">удалить</button>
+        </div>
+      </div>
+      <div class="cs-body">
+        ${sc.rows.map((r,ri)=>renderRow(sc,si,r,ri)).join('')}
+        <div class="add-row-bar">
+          <button class="b-dialog" onclick="addRow('${sc.id}',mkDialogRow)">+ диалог</button>
+          <button class="b-choice" onclick="addChoiceRow('${sc.id}')">+ выбор</button>
+          <button class="b-ending" onclick="addRow('${sc.id}',mkEndingRow)">+ концовка</button>
+          ${sc.type==='cutscene'?`<button class="b-anim" onclick="addRow('${sc.id}',mkAnimRow)">+ анимация</button>`:''}
+        </div>
+      </div>
+    </div>`}).join('');
+  renderSidebar();
+}
+
+function renderRow(sc,si,r,ri){
+  if(r.type==='dialog') return renderDlRow(sc,si,r,ri);
+  if(r.type==='choice') return renderChoiceRow(sc,si,r,ri);
+  if(r.type==='ending') return renderEndingRow(sc,si,r,ri);
+  if(r.type==='anim')   return renderAnimRow(sc,si,r,ri);
+  return '';
+}
+
+function renderDlRow(sc,si,r,ri){
+  return`<div class="dl-row">
+    <div class="dl-num">${ri+1}</div>
+    <div class="dl-fields">
+      <div class="dl-row-inner">
+        <div class="field"><label>SPEAKER</label>
+          <select onchange="S.scenes[${si}].rows[${ri}].speaker=this.value;save();renderScenes()">
+            ${charOpts(r.speaker)}
+          </select></div>
+        <div class="field"><label>SPRITE</label>
+          <select onchange="S.scenes[${si}].rows[${ri}].sprite=this.value;save()">
+            ${spriteOpts(r.speaker,r.sprite)}
+          </select></div>
+        <div class="field"><label>ПОЗИЦИЯ</label>
+          <select onchange="S.scenes[${si}].rows[${ri}].spritePos=this.value;save()">
+            ${posOpts(r.spritePos||'center')}
+          </select></div>
+        <div class="field"><label>СПРАЙТ 2</label>
+          <select onchange="S.scenes[${si}].rows[${ri}].sprite2=this.value;save()">
+            ${getAllSpriteOpts(r.sprite2)}
+          </select></div>
+        <div class="field"><label>ПОЗИЦИЯ 2</label>
+          <select onchange="S.scenes[${si}].rows[${ri}].sprite2pos=this.value;save()">
+            ${posOpts(r.sprite2pos||'right')}
+          </select></div>
+      </div>
+      <div class="dl-row-inner">
+        <div class="field"><label>BG</label>
+          <select onchange="S.scenes[${si}].rows[${ri}].bg=this.value;save()">
+            ${bgOpts(r.bg)}
+          </select></div>
+        <div class="field"><label>MUSIC</label>
+          <select onchange="S.scenes[${si}].rows[${ri}].music=this.value;save()">
+            ${musOpts(r.music)}
+          </select></div>
+      </div>
+      <div class="field"><label>TEXT</label>
+        <textarea oninput="S.scenes[${si}].rows[${ri}].text=this.value;save()" placeholder="Текст реплики...">${esc(r.text)}</textarea>
+      </div>
+    </div>
+    <button class="dl-del" onclick="delRow('${sc.id}','${r.id}')">✕</button>
+  </div>`
+}
+
+function getAllSpriteOpts(val){
+  const opts=['<option value="">— нет —</option>'];
+  S.characters.forEach(c=>c.sprites.forEach(s=>opts.push(`<option value="${esc(c.name+':'+s.name)}" ${val===c.name+':'+s.name?'selected':''}>${esc(c.name)} — ${esc(s.name)}</option>`)));
+  return opts.join('');
+}
+
+function renderChoiceRow(sc,si,r,ri){
+  return`<div class="dl-row" style="border-color:rgba(107,159,212,.2)">
+    <div class="dl-num">${ri+1}</div>
+    <div class="dl-fields">
+      <div class="choice-block">
+        <div class="choice-lbl">ВЫБОР — варианты</div>
+        ${r.choices.map((ch,chi)=>`
+        <div class="choice-opt">
+          <input value="${esc(ch.text)}" oninput="S.scenes[${si}].rows[${ri}].choices[${chi}].text=this.value;save()" placeholder="Текст варианта">
+          <select onchange="S.scenes[${si}].rows[${ri}].choices[${chi}].gotoScene=this.value;save()">
+            ${sceneOpts(ch.gotoScene)}
+          </select>
+          <button class="odl" onclick="delChoiceOpt('${sc.id}','${r.id}','${ch.id}')">✕</button>
+        </div>`).join('')}
+        <button class="add-sub" onclick="addChoiceOpt('${sc.id}','${r.id}')">+ вариант</button>
+      </div>
+    </div>
+    <button class="dl-del" onclick="delRow('${sc.id}','${r.id}')">✕</button>
+  </div>`
+}
+
+function renderEndingRow(sc,si,r,ri){
+  return`<div class="dl-row" style="border-color:rgba(212,168,83,.3)">
+    <div class="dl-num">${ri+1}</div>
+    <div class="dl-fields">
+      <div class="ending-badge">★ КОНЦОВКА</div>
+      <div class="dl-row-inner">
+        <div class="field"><label>ЗАГОЛОВОК</label>
+          <input value="${esc(r.title)}" oninput="S.scenes[${si}].rows[${ri}].title=this.value;save()" placeholder="Название концовки"></div>
+        <div class="field"><label>ТИП</label>
+          <select onchange="S.scenes[${si}].rows[${ri}].endType=this.value;save()">
+            <option value="end" ${r.endType==='end'?'selected':''}>Финал (возврат в меню)</option>
+            <option value="goto" ${r.endType==='goto'?'selected':''}>Перейти к сцене</option>
+          </select></div>
+        ${r.endType==='goto'?`<div class="field"><label>СЦЕНА</label>
+          <select onchange="S.scenes[${si}].rows[${ri}].gotoScene=this.value;save()">
+            ${sceneOpts(r.gotoScene||'')}
+          </select></div>`:''}
+      </div>
+      <div class="field"><label>ТЕКСТ КОНЦОВКИ</label>
+        <textarea oninput="S.scenes[${si}].rows[${ri}].text=this.value;save()" placeholder="Описание или финальная фраза...">${esc(r.text)}</textarea>
+      </div>
+    </div>
+    <button class="dl-del" onclick="delRow('${sc.id}','${r.id}')">✕</button>
+  </div>`
+}
+
+function renderAnimRow(sc,si,r,ri){
+  return`<div class="dl-row" style="border-color:rgba(126,200,154,.2)">
+    <div class="dl-num">${ri+1}</div>
+    <div class="dl-fields">
+      <span class="anim-badge">ANIM</span>
+      <div class="dl-row-inner" style="margin-top:6px">
+        <div class="field"><label>ЭФФЕКТ</label>
+          <select onchange="S.scenes[${si}].rows[${ri}].effect=this.value;save()">
+            <option value="fade" ${r.effect==='fade'?'selected':''}>Fade in/out</option>
+            <option value="flash" ${r.effect==='flash'?'selected':''}>Вспышка</option>
+            <option value="shake" ${r.effect==='shake'?'selected':''}>Тряска</option>
+            <option value="slide" ${r.effect==='slide'?'selected':''}>Слайд</option>
+            <option value="text" ${r.effect==='text'?'selected':''}>Полноэкранный текст</option>
+            <option value="blackout" ${r.effect==='blackout'?'selected':''}>Затемнение</option>
+          </select></div>
+        <div class="field"><label>ДЛИТЕЛЬНОСТЬ (мс)</label>
+          <input type="number" value="${r.duration||1000}" min="100" max="10000" oninput="S.scenes[${si}].rows[${ri}].duration=+this.value;save()"></div>
+        <div class="color-field"><label>ЦВЕТ</label><input type="color" value="${r.color||'#000000'}" oninput="S.scenes[${si}].rows[${ri}].color=this.value;save()"></div>
+      </div>
+      ${r.effect==='text'?`<div class="field"><label>ТЕКСТ АНИМАЦИИ</label>
+        <input value="${esc(r.text||'')}" oninput="S.scenes[${si}].rows[${ri}].text=this.value;save()" placeholder="Текст поверх экрана..."></div>`:''}
+    </div>
+    <button class="dl-del" onclick="delRow('${sc.id}','${r.id}')">✕</button>
+  </div>`
+}
+
+// ─── MENU ─────────────────────────────────────────────
+function updateMenuPreview(){
+  const t=document.getElementById('menu-title-input').value||'Название';
+  document.getElementById('mp-title').textContent=t;
+  const bg=document.getElementById('menu-bg-input').value;
+  const prev=document.getElementById('menu-preview');
+  prev.style.backgroundImage=bg?`url('${bg}')`:'none';
+  S.menu.title=t;
+  S.menu.bgUrl=bg;
+  save();
+}
+function applyMenuBgColor(){
+  const c=document.getElementById('menu-bg-color-input').value;
+  document.documentElement.style.setProperty('--menu-bg',c);
+  S.menu.bgColor=c;save();
+}
+function applyMenuAccent(v){
+  document.documentElement.style.setProperty('--menu-accent',v);
+  S.menu.accentColor=v;save();
+}
+function populateMenuSceneSelect(){
+  const sel=document.getElementById('menu-start-scene');
+  if(!sel)return;
+  sel.innerHTML='<option value="">— выбери сцену —</option>'+S.scenes.map(sc=>`<option value="${sc.id}" ${S.menu.startScene===sc.id?'selected':''}>${esc(sc.name)}</option>`).join('');
+  sel.onchange=()=>{S.menu.startScene=sel.value;save()};
+}
+
+// ─── CUSTOMIZE ────────────────────────────────────────
+function setVar(v,val){document.documentElement.style.setProperty(v,val)}
+function setDlgVar(v,val){document.documentElement.style.setProperty(v,val)}
+function setDlgBorder(c){
+  const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);
+  document.documentElement.style.setProperty('--dlg-border',`rgba(${r},${g},${b},.35)`);
+}
+function setSpritePos(p,el){
+  document.querySelectorAll('#sprite-pos-group .radio-opt').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  document.documentElement.style.setProperty('--sprite-pos',p);
+}
+function applyOverlay(){
+  const c=document.getElementById('overlay-color').value;
+  const o=document.getElementById('overlay-opacity').value;
+  document.getElementById('overlay-val').textContent=o+'%';
+  const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);
+  const el=document.getElementById('pl-bg-overlay');
+  el.style.background=`rgba(${r},${g},${b},${o/100})`;
+}
+
+// ═══ PLAYER ══════════════════════════════════════════
+let PL={
+  rows:[],idx:0,typing:false,fullText:'',typingTimer:null,
+  auto:false,autoTimer:null,currentBg:'',currentMusic:'',
+  audio:null,animQueue:null,sceneId:''
+};
+
+function runNovel(){
+  // start from menu
+  const title=document.getElementById('menu-title-input').value||S.menu.title||'Новелла';
+  const sub=document.getElementById('menu-sub-input').value||S.menu.sub||'';
+  document.getElementById('pl-menu-title').textContent=title;
+  document.getElementById('pl-menu-sub').textContent=sub;
+  const menuEl=document.getElementById('pl-menu');
+  menuEl.style.display='flex';
+  // apply menu bg
+  const bgUrl=document.getElementById('menu-bg-input').value||S.menu.bgUrl||'';
+  menuEl.style.background=bgUrl?`url('${bgUrl}') center/cover, var(--menu-bg)`:'var(--menu-bg)';
+  document.getElementById('pl-dialog').style.display='none';
+  document.getElementById('pl-choices').classList.remove('show');
+  document.getElementById('pl-ending').classList.remove('show');
+  document.getElementById('pl-topbar').style.opacity='0';
+  document.getElementById('pl-topbar').style.pointerEvents='none';
+  
+}
+
+function startFromMenu(){
+  document.getElementById('pl-menu').style.display='none';
+  document.getElementById('pl-topbar').style.opacity='1';
+  document.getElementById('pl-topbar').style.pointerEvents='all';
+  const startId=document.getElementById('menu-start-scene').value||S.menu.startScene;
+  const si=startId?S.scenes.findIndex(x=>x.id===startId):0;
+  runScene(si>=0?si:0);
+}
+
+function runScene(si){
+  const sc=S.scenes[si];
+  if(!sc){toast('нет сцены');return}
+  PL.rows=sc.rows;PL.idx=-1;PL.sceneId=sc.id;
+  PL.typing=false;clearTimeout(PL.typingTimer);clearTimeout(PL.autoTimer);
+  document.getElementById('pl-dialog').style.display='none';
+  document.getElementById('pl-choices').classList.remove('show');
+  document.getElementById('pl-ending').classList.remove('show');
+  document.getElementById('pl-continue').style.opacity='0';
+  
+  advanceDialog();
+}
+
+function closePlayer(){
+  clearTimeout(PL.typingTimer);clearTimeout(PL.autoTimer);
+  PL.auto=false;document.getElementById('btn-auto').classList.remove('on');
+  if(PL.audio){PL.audio.pause();PL.audio=null}
+  document.getElementById('player').classList.remove('visible');
+}
+
+function advanceDialog(){
+  if(document.getElementById('pl-choices').classList.contains('show')) return;
+  if(document.getElementById('pl-ending').classList.contains('show')) return;
+  clearTimeout(PL.autoTimer);
+  if(PL.typing){
+    clearTimeout(PL.typingTimer);
+    document.getElementById('pl-text').textContent=PL.fullText;
+    PL.typing=false;
+    document.getElementById('pl-continue').style.opacity='1';
+    if(PL.auto) scheduleAuto();
+    return;
+  }
+  PL.idx++;
+  if(PL.idx>=PL.rows.length){closePlayer();return}
+  const r=PL.rows[PL.idx];
+  if(r.type==='anim'){runAnim(r);return}
+  if(r.type==='choice'){showChoice(r);return}
+  if(r.type==='ending'){showEnding(r);return}
+  if(r.type==='dialog'){applyEnv(r);typeText(r)}
+}
+
+function applyEnv(r){
+  if(r.bg){
+    const b=S.backgrounds.find(x=>x.name===r.bg);
+    const url=b?b.link:'';
+    if(url!==PL.currentBg){
+      PL.currentBg=url;
+      const el=document.getElementById('pl-bg');
+      el.style.backgroundImage=url?`url('${url}')`:'none';
+      document.getElementById('pl-bg-color').style.opacity=url?'0':'1';
+    }
+  }
+  if(r.music){
+    const m=S.music.find(x=>x.name===r.music);
+    if(m&&m.link&&m.link!==PL.currentMusic){
+      PL.currentMusic=m.link;
+      if(PL.audio){PL.audio.pause()}
+      PL.audio=new Audio(m.link);
+      PL.audio.loop=true;
+      PL.audio.volume=0.55;
+      PL.audio.play().catch(e=>console.warn('audio:',e));
+    }
+  }
+  // sprites
+  const layer=document.getElementById('pl-sprites');
+  layer.innerHTML='';
+  // sprite 1
+  if(r.speaker&&r.sprite){
+    const ch=S.characters.find(x=>x.name===r.speaker);
+    if(ch){
+      const sp=ch.sprites.find(x=>x.name===r.sprite);
+      if(sp&&sp.link) addSpriteEl(layer,sp.link,r.spritePos||'center',ch.name);
+    }
+  }
+  // sprite 2
+  if(r.sprite2&&r.sprite2.includes(':')){
+    const[cn,sn]=r.sprite2.split(':');
+    const ch=S.characters.find(x=>x.name===cn);
+    if(ch){const sp=ch.sprites.find(x=>x.name===sn);if(sp&&sp.link)addSpriteEl(layer,sp.link,r.sprite2pos||'right',cn)}
+  }
+}
+
+function addSpriteEl(layer,url,pos,name){
+  const w=document.createElement('div');
+  w.className=`pl-sprite-wrap pos-${pos}`;
+  const img=document.createElement('img');
+  img.src=url;img.alt=name||'';
+  w.appendChild(img);layer.appendChild(w);
+}
+
+function typeText(r){
+  const sp=document.getElementById('pl-speaker');
+  const tx=document.getElementById('pl-text');
+  const co=document.getElementById('pl-continue');
+  const ch=r.speaker?S.characters.find(x=>x.name===r.speaker):null;
+  sp.textContent=r.speaker||'';
+  sp.style.color=ch?.color||'var(--dlg-speaker-color)';
+  tx.textContent='';co.style.opacity='0';
+  document.getElementById('pl-dialog').style.display='block';
+  PL.fullText=r.text||'';PL.typing=true;
+  let i=0;
+  const tick=()=>{
+    if(i<PL.fullText.length){tx.textContent+=PL.fullText[i++];PL.typingTimer=setTimeout(tick,25)}
+    else{PL.typing=false;co.style.opacity='1';if(PL.auto)scheduleAuto()}
+  };tick();
+}
+
+function showChoice(r){
+  const el=document.getElementById('pl-choices');
+  el.innerHTML='';
+  r.choices.forEach(ch=>{
+    const btn=document.createElement('button');
+    btn.className='ch-btn';btn.textContent=ch.text||'...';
+    btn.onclick=()=>{
+      el.classList.remove('show');
+      if(ch.gotoScene){
+        const si=S.scenes.findIndex(x=>x.id===ch.gotoScene);
+        if(si>=0){runScene(si);return}
+      }
+      advanceDialog();
+    };
+    el.appendChild(btn);
+  });
+  el.classList.add('show');
+}
+
+function showEnding(r){
+  document.getElementById('end-title').textContent=r.title||'Конец';
+  document.getElementById('end-text').textContent=r.text||'';
+  const el=document.getElementById('pl-ending');
+  el.classList.add('show');
+  if(r.endType==='goto'&&r.gotoScene){
+    const si=S.scenes.findIndex(x=>x.id===r.gotoScene);
+    el.querySelector('.end-btn').onclick=()=>{el.classList.remove('show');if(si>=0)runScene(si);else closePlayer()};
+  } else {
+    el.querySelector('.end-btn').onclick=()=>closePlayer();
+  }
+}
+
+// ─── ANIMATIONS ───────────────────────────────────────
+function runAnim(r){
+  const dur=r.duration||1000;
+  const overlay=document.getElementById('pl-bg-overlay');
+  const effect=r.effect||'fade';
+  const color=r.color||'#000';
+
+  if(effect==='fade'){
+    overlay.style.background=color;overlay.style.transition='none';overlay.style.opacity='0';
+    setTimeout(()=>{overlay.style.transition=`opacity ${dur/2000}s`;overlay.style.opacity='1';
+      setTimeout(()=>{overlay.style.opacity='0';setTimeout(()=>advanceDialog(),dur/2)},dur/2)},50);
+  } else if(effect==='flash'){
+    overlay.style.background=color;overlay.style.transition='none';overlay.style.opacity='1';
+    setTimeout(()=>{overlay.style.transition=`opacity ${dur/1000}s`;overlay.style.opacity='0';setTimeout(()=>advanceDialog(),dur)},50);
+  } else if(effect==='shake'){
+    const pl=document.getElementById('player');
+    pl.style.transition='none';let t=0;
+    const sh=setInterval(()=>{pl.style.transform=`translate(${(Math.random()-.5)*10}px,${(Math.random()-.5)*6}px)`;t+=50;if(t>=dur){clearInterval(sh);pl.style.transform='none';advanceDialog()}},50);
+  } else if(effect==='slide'){
+    overlay.style.background=color;overlay.style.transition='none';overlay.style.opacity='1';
+    overlay.style.transform='translateX(-100%)';
+    setTimeout(()=>{overlay.style.transition=`transform ${dur/1000}s ease`;overlay.style.transform='translateX(0)';
+      setTimeout(()=>{overlay.style.transform='translateX(100%)';setTimeout(()=>{overlay.style.transition='none';overlay.style.transform='none';overlay.style.opacity='0';advanceDialog()},dur)},dur)},50);
+  } else if(effect==='text'){
+    overlay.style.background='rgba(0,0,0,.95)';overlay.style.opacity='1';overlay.style.transition='none';
+    overlay.style.display='flex';overlay.style.alignItems='center';overlay.style.justifyContent='center';
+    overlay.innerHTML=`<div style="font-family:'Cinzel',serif;font-size:28px;font-weight:300;color:${color};letter-spacing:6px;text-align:center;opacity:0;transition:opacity .5s">${esc(r.text||'')}</div>`;
+    setTimeout(()=>{overlay.querySelector('div').style.opacity='1';
+      setTimeout(()=>{overlay.querySelector('div').style.opacity='0';
+        setTimeout(()=>{overlay.style.opacity='0';overlay.innerHTML='';overlay.style.display='';advanceDialog()},600)},dur-600)},50);
+  } else if(effect==='blackout'){
+    overlay.style.background=color;overlay.style.transition=`opacity ${dur/2000}s`;overlay.style.opacity='1';
+    setTimeout(()=>{overlay.style.opacity='0';setTimeout(()=>advanceDialog(),dur/2)},dur/2);
+  } else { advanceDialog(); }
+}
+
+function toggleAuto(){
+  PL.auto=!PL.auto;
+  document.getElementById('btn-auto').classList.toggle('on',PL.auto);
+  if(PL.auto&&!PL.typing) scheduleAuto();
+  else clearTimeout(PL.autoTimer);
+}
+function scheduleAuto(){clearTimeout(PL.autoTimer);PL.autoTimer=setTimeout(()=>{if(PL.auto)advanceDialog()},2400)}
+function skipDialog(){clearTimeout(PL.typingTimer);clearTimeout(PL.autoTimer);PL.idx=PL.rows.length;closePlayer()}
+
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('player').classList.contains('visible')) return;
+  if(e.key===' '||e.key==='Enter'||e.key==='ArrowRight') advanceDialog();
+  if(e.key==='Escape') closePlayer();
+});
+
+// ═══ EXPORT ══════════════════════════════════════════
+function openExport(){
+  const html=buildExportHTML();
+  const body=document.getElementById('modal-body');
+  body.innerHTML=`
+    <p style="font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:8px">
+      Скачай HTML файл — это полностью автономная новелла. Открывается в любом браузере, ничего не нужно устанавливать.
+    </p>
+    <pre id="export-preview">${esc(html.slice(0,600))}...\n\n[файл ${(html.length/1024).toFixed(1)} КБ]</pre>
+    <hr style="border-color:var(--border);margin:10px 0">
+    <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--accent);letter-spacing:2px;margin-bottom:8px">GitHub Pages — гайд</div>
+    <ol style="font-size:11px;color:var(--text-dim);line-height:2;padding-left:18px">
+      <li>Скачай файл (кнопка ниже)</li>
+      <li>Переименуй в <code style="color:var(--accent2)">index.html</code></li>
+      <li>Зайди на <strong style="color:var(--text)">github.com</strong> → New repository</li>
+      <li>Загрузи <code style="color:var(--accent2)">index.html</code> через "Add file → Upload files"</li>
+      <li>Settings → Pages → Branch: main → Save</li>
+      <li>Через ~1 мин сайт будет на <code style="color:var(--accent3)">username.github.io/repo-name</code></li>
+    </ol>`;
+  document.getElementById('modal-title').textContent='Экспорт новеллы';
+  document.getElementById('modal-primary-btn').textContent='⬇ Скачать HTML';
+  document.getElementById('modal-primary-btn').onclick=()=>downloadHTML(html);
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function buildExportHTML(){
+  const data=btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+  // get computed CSS vars for theming
+  const cs=getComputedStyle(document.documentElement);
+  const vars=['--dlg-bg','--dlg-border','--dlg-text','--dlg-speaker-color','--dlg-font','--dlg-size','--menu-bg','--menu-accent','--menu-text','--bg'];
+  const customVars=vars.map(v=>`${v}:${cs.getPropertyValue(v).trim()};`).join('\n  ');
+  return `<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${esc(S.menu.title||'Новелла')}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@300;400&family=Crimson+Pro:ital,wght@0,200;0,300;1,200&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{
+  ${customVars}
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#000}
+#pl-bg{position:fixed;inset:0;background-size:cover;background-position:center;transition:.5s background-image}
+#pl-bg-color{position:fixed;inset:0;background:#000;transition:.4s opacity;pointer-events:none}
+#pl-bg-overlay{position:fixed;inset:0;transition:.4s opacity;pointer-events:none}
+#pl-sprites{position:fixed;bottom:0;left:0;right:0;pointer-events:none}
+.pl-sprite-wrap{position:absolute;bottom:0;transition:.3s all}
+.pl-sprite-wrap img{max-height:80vh;max-width:35vw;object-fit:contain;display:block}
+.pl-sprite-wrap.pos-left{left:5%}.pl-sprite-wrap.pos-center{left:50%;transform:translateX(-50%)}
+.pl-sprite-wrap.pos-right{right:5%}.pl-sprite-wrap.pos-left2{left:15%}.pl-sprite-wrap.pos-right2{right:15%}
+#pl-menu{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:var(--menu-bg)}
+.pl-menu-title{font-family:'Cinzel',serif;font-size:36px;font-weight:300;color:var(--menu-accent);letter-spacing:8px;text-align:center;text-shadow:0 0 40px rgba(212,168,83,.3)}
+.pl-menu-sub{font-size:12px;color:rgba(255,255,255,.3);letter-spacing:3px}
+.pl-menu-btn{background:none;border:1px solid var(--menu-accent);color:var(--menu-text);padding:10px 48px;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:14px;letter-spacing:3px;transition:.18s all;margin:2px}
+.pl-menu-btn:hover{background:rgba(212,168,83,.12)}
+#pl-topbar{position:fixed;top:0;right:0;display:flex;gap:7px;padding:13px 18px;z-index:10}
+.p-btn{background:rgba(8,8,18,.75);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.65);padding:4px 11px;border-radius:4px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;transition:.13s all}
+.p-btn:hover,.p-btn.on{background:rgba(212,168,83,.15);border-color:var(--menu-accent);color:var(--menu-accent)}
+#pl-dialog{position:fixed;left:30px;right:30px;bottom:25px;background:var(--dlg-bg);border:1px solid var(--dlg-border);border-radius:10px;padding:16px 22px 14px;cursor:pointer;backdrop-filter:blur(10px)}
+#pl-speaker{font-family:'Cinzel',serif;font-size:17px;font-weight:300;color:var(--dlg-speaker-color);letter-spacing:2px;margin-bottom:7px}
+#pl-text{font-family:var(--dlg-font);font-size:var(--dlg-size);line-height:1.7;color:var(--dlg-text);min-height:52px}
+#pl-continue{position:absolute;bottom:11px;right:18px;font-size:16px;color:var(--menu-accent);opacity:0;animation:blink 1.3s infinite}
+@keyframes blink{0%,100%{opacity:.25}50%{opacity:1}}
+#pl-choices{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:11px;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);z-index:15}
+#pl-choices.show{display:flex}
+.ch-btn{background:rgba(8,8,18,.88);border:1px solid rgba(212,168,83,.28);color:#ede8df;padding:12px 40px;border-radius:7px;cursor:pointer;font-family:'Cinzel',serif;font-size:16px;font-weight:300;letter-spacing:1.5px;transition:.17s all;min-width:300px;text-align:center}
+.ch-btn:hover{background:rgba(212,168,83,.14);border-color:var(--menu-accent);color:var(--menu-accent)}
+#pl-ending{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:16}
+#pl-ending.show{display:flex}
+.end-label{font-size:11px;letter-spacing:4px;color:rgba(255,255,255,.3)}
+.end-title{font-family:'Cinzel',serif;font-size:32px;font-weight:300;color:var(--menu-accent);letter-spacing:4px;text-align:center}
+.end-text{font-family:'Crimson Pro',serif;font-size:16px;color:rgba(255,255,255,.5);text-align:center;max-width:500px;line-height:1.6}
+.end-btn{background:none;border:1px solid var(--menu-accent);color:var(--menu-accent);padding:10px 40px;border-radius:5px;cursor:pointer;font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="pl-bg"></div>
+<div id="pl-bg-color"></div>
+<div id="pl-bg-overlay"></div>
+<div id="pl-sprites"></div>
+<div id="pl-menu">
+  <div class="pl-menu-title">${esc(S.menu.title||'Новелла')}</div>
+  <div class="pl-menu-sub">${esc(S.menu.sub||'')}</div>
+  <button class="pl-menu-btn" onclick="startFromMenu()">НАЧАТЬ</button>
+</div>
+<div id="pl-topbar">
+  <button class="p-btn" id="btn-auto" onclick="toggleAuto()">авто</button>
+  <button class="p-btn" onclick="skipDialog()">пропустить</button>
+</div>
+<div id="pl-dialog" onclick="advanceDialog()" style="display:none">
+  <div id="pl-speaker"></div>
+  <div id="pl-text"></div>
+  <div id="pl-continue">▾</div>
+</div>
+<div id="pl-choices"></div>
+<div id="pl-ending">
+  <div class="end-label">КОНЕЦ</div>
+  <div class="end-title" id="end-title"></div>
+  <div class="end-text" id="end-text"></div>
+  <button class="end-btn" onclick="closePlayer()">В главное меню</button>
+</div>
+<script>
+const S=JSON.parse(decodeURIComponent(escape(atob('${data}'))));
+let PL={rows:[],idx:0,typing:false,fullText:'',typingTimer:null,auto:false,autoTimer:null,currentBg:'',currentMusic:'',audio:null,sceneId:''};
+function startFromMenu(){
+  const pickStartScene = () => {
+    if (S.menu && S.menu.startScene) return S.menu.startScene;
+    const fallback = S.scenes.find(x => Array.isArray(x.rows) && x.rows.length > 0);
+    return fallback ? fallback.id : '';
+  };
+  const startId = pickStartScene();
+  const si = startId ? S.scenes.findIndex(x => x.id === startId) : -1;
+  if(si < 0){
+    alert('Нет сцен для запуска. Добавь хотя бы одну сцену с репликами.');
+    return;
+  }
+  document.getElementById('pl-menu').style.display='none';
+  document.getElementById('pl-topbar').style.opacity='1';
+  document.getElementById('pl-topbar').style.pointerEvents='all';
+  runScene(si);
+}
+function runScene(si){const sc=S.scenes[si];if(!sc){alert('Сцена не найдена');return}PL.rows=sc.rows;PL.idx=-1;PL.sceneId=sc.id;PL.typing=false;clearTimeout(PL.typingTimer);clearTimeout(PL.autoTimer);document.getElementById('pl-dialog').style.display='none';document.getElementById('pl-choices').classList.remove('show');document.getElementById('pl-ending').classList.remove('show');document.getElementById('pl-continue').style.opacity='0';advanceDialog()}
+function closePlayer(){
+  clearTimeout(PL.typingTimer);clearTimeout(PL.autoTimer);
+  PL.auto=false;
+  const ab=document.getElementById('btn-auto');
+  if(ab) ab.classList.remove('on');
+  if(PL.audio){PL.audio.pause();PL.audio=null}
+  document.getElementById('pl-menu').style.display='flex';
+  document.getElementById('pl-topbar').style.opacity='0';
+  document.getElementById('pl-topbar').style.pointerEvents='none';
+  document.getElementById('pl-dialog').style.display='none';
+  document.getElementById('pl-choices').classList.remove('show');
+  document.getElementById('pl-ending').classList.remove('show');
+}
+function advanceDialog(){if(document.getElementById('pl-choices').classList.contains('show'))return;if(document.getElementById('pl-ending').classList.contains('show'))return;clearTimeout(PL.autoTimer);if(PL.typing){clearTimeout(PL.typingTimer);document.getElementById('pl-text').textContent=PL.fullText;PL.typing=false;document.getElementById('pl-continue').style.opacity='1';if(PL.auto)scheduleAuto();return}PL.idx++;if(PL.idx>=PL.rows.length){location.reload();return}const r=PL.rows[PL.idx];if(r.type==='anim'){runAnim(r);return}if(r.type==='choice'){showChoice(r);return}if(r.type==='ending'){showEnding(r);return}if(r.type==='dialog'){applyEnv(r);typeText(r)}}
+function applyEnv(r){if(r.bg){const b=S.backgrounds.find(x=>x.name===r.bg);const url=b?b.link:'';if(url!==PL.currentBg){PL.currentBg=url;const el=document.getElementById('pl-bg');el.style.backgroundImage=url?'url(\''+url+'\')':'none';document.getElementById('pl-bg-color').style.opacity=url?'0':'1'}}if(r.music){const m=S.music.find(x=>x.name===r.music);if(m&&m.link&&m.link!==PL.currentMusic){PL.currentMusic=m.link;if(PL.audio)PL.audio.pause();PL.audio=new Audio(m.link);PL.audio.loop=true;PL.audio.volume=0.55;PL.audio.play().catch(e=>console.warn(e))}}const layer=document.getElementById('pl-sprites');layer.innerHTML='';if(r.speaker&&r.sprite){const ch=S.characters.find(x=>x.name===r.speaker);if(ch){const sp=ch.sprites.find(x=>x.name===r.sprite);if(sp&&sp.link)addSpriteEl(layer,sp.link,r.spritePos||'center',ch.name)}}if(r.sprite2&&r.sprite2.includes(':')){const[cn,sn]=r.sprite2.split(':');const ch=S.characters.find(x=>x.name===cn);if(ch){const sp=ch.sprites.find(x=>x.name===sn);if(sp&&sp.link)addSpriteEl(layer,sp.link,r.sprite2pos||'right',cn)}}}
+function addSpriteEl(layer,url,pos,name){const w=document.createElement('div');w.className='pl-sprite-wrap pos-'+pos;const img=document.createElement('img');img.src=url;img.alt=name||'';w.appendChild(img);layer.appendChild(w)}
+function typeText(r){const sp=document.getElementById('pl-speaker');const tx=document.getElementById('pl-text');const co=document.getElementById('pl-continue');const ch=r.speaker?S.characters.find(x=>x.name===r.speaker):null;sp.textContent=r.speaker||'';sp.style.color=ch?.color||'var(--dlg-speaker-color)';tx.textContent='';co.style.opacity='0';document.getElementById('pl-dialog').style.display='block';PL.fullText=r.text||'';PL.typing=true;let i=0;const tick=()=>{if(i<PL.fullText.length){tx.textContent+=PL.fullText[i++];PL.typingTimer=setTimeout(tick,25)}else{PL.typing=false;co.style.opacity='1';if(PL.auto)scheduleAuto()}};tick()}
+function showChoice(r){const el=document.getElementById('pl-choices');el.innerHTML='';r.choices.forEach(ch=>{const btn=document.createElement('button');btn.className='ch-btn';btn.textContent=ch.text||'...';btn.onclick=()=>{el.classList.remove('show');if(ch.gotoScene){const si=S.scenes.findIndex(x=>x.id===ch.gotoScene);if(si>=0){runScene(si);return}}advanceDialog()};el.appendChild(btn)});el.classList.add('show')}
+function showEnding(r){document.getElementById('end-title').textContent=r.title||'Конец';document.getElementById('end-text').textContent=r.text||'';const el=document.getElementById('pl-ending');el.classList.add('show')}
+function runAnim(r){const dur=r.duration||1000;const overlay=document.getElementById('pl-bg-overlay');const effect=r.effect||'fade';const color=r.color||'#000';if(effect==='fade'){overlay.style.background=color;overlay.style.transition='none';overlay.style.opacity='0';setTimeout(()=>{overlay.style.transition='opacity '+(dur/2000)+'s';overlay.style.opacity='1';setTimeout(()=>{overlay.style.opacity='0';setTimeout(()=>advanceDialog(),dur/2)},dur/2)},50)}else if(effect==='flash'){overlay.style.background=color;overlay.style.transition='none';overlay.style.opacity='1';setTimeout(()=>{overlay.style.transition='opacity '+(dur/1000)+'s';overlay.style.opacity='0';setTimeout(()=>advanceDialog(),dur)},50)}else if(effect==='shake'){const pl=document.body;pl.style.transition='none';let t=0;const sh=setInterval(()=>{pl.style.transform='translate('+(Math.random()-.5)*10+'px,'+(Math.random()-.5)*6+'px)';t+=50;if(t>=dur){clearInterval(sh);pl.style.transform='none';advanceDialog()}},50)}else if(effect==='text'){overlay.style.background='rgba(0,0,0,.95)';overlay.style.opacity='1';overlay.style.transition='none';overlay.style.cssText+='display:flex;align-items:center;justify-content:center;';overlay.innerHTML='<div style="font-family:Cinzel,serif;font-size:28px;font-weight:300;color:'+color+';letter-spacing:6px;text-align:center;opacity:0;transition:opacity .5s">'+r.text+'<\\/div>';setTimeout(()=>{overlay.querySelector('div').style.opacity='1';setTimeout(()=>{overlay.querySelector('div').style.opacity='0';setTimeout(()=>{overlay.style.opacity='0';overlay.innerHTML='';overlay.style.display='';advanceDialog()},600)},dur-600)},50)}else if(effect==='blackout'){overlay.style.background=color;overlay.style.transition='opacity '+(dur/2000)+'s';overlay.style.opacity='1';setTimeout(()=>{overlay.style.opacity='0';setTimeout(()=>advanceDialog(),dur/2)},dur/2)}else{advanceDialog()}}
+function toggleAuto(){PL.auto=!PL.auto;document.getElementById('btn-auto').classList.toggle('on',PL.auto);if(PL.auto&&!PL.typing)scheduleAuto();else clearTimeout(PL.autoTimer)}
+function scheduleAuto(){clearTimeout(PL.autoTimer);PL.autoTimer=setTimeout(()=>{if(PL.auto)advanceDialog()},2400)}
+function skipDialog(){clearTimeout(PL.typingTimer);clearTimeout(PL.autoTimer);closePlayer()}
+document.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'||e.key==='ArrowRight')advanceDialog();});
+// apply menu bg
+(()=>{const m=document.getElementById('pl-menu');const bg='${S.menu.bgUrl||''}';if(bg)m.style.background="url('"+bg+"') center/cover, var(--menu-bg)"})();
+<\/script>
+</body>
+</html>`;
+}
+function downloadHTML(html){
+  const blob=new Blob([html],{type:'text/html'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(S.menu.title||'novella').replace(/\s+/g,'_')+'.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Файл скачан!');
+}
+
+// ═══ MODAL ═══════════════════════════════════════════
+function closeModal(e){if(e.target===document.getElementById('modal-overlay'))closeModalDirect()}
+function closeModalDirect(){document.getElementById('modal-overlay').classList.remove('show')}
+
+// ═══ INIT ════════════════════════════════════════════
+load();
+// restore saved menu values
+if(S.menu){
+  if(S.menu.title)document.getElementById('menu-title-input').value=S.menu.title;
+  if(S.menu.sub)document.getElementById('menu-sub-input').value=S.menu.sub;
+  if(S.menu.bgUrl)document.getElementById('menu-bg-input').value=S.menu.bgUrl;
+  if(S.menu.bgColor){document.getElementById('menu-bg-color-input').value=S.menu.bgColor;document.documentElement.style.setProperty('--menu-bg',S.menu.bgColor)}
+  if(S.menu.accentColor){document.documentElement.style.setProperty('--menu-accent',S.menu.accentColor)}
+}
+renderAll();
+updateMenuPreview();
+</script>
+</body>
+</html>
+

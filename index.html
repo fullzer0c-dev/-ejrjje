@@ -883,16 +883,24 @@ function runNovel(){
   document.getElementById('pl-ending').classList.remove('show');
   document.getElementById('pl-topbar').style.opacity='0';
   document.getElementById('pl-topbar').style.pointerEvents='none';
-  
+  document.getElementById('player').classList.add('visible');
+}
+
+function getPreviewStartSceneId(){
+  const manual=document.getElementById('menu-start-scene').value||S.menu.startScene||'';
+  if(manual) return manual;
+  const fallback=S.scenes.find(x=>Array.isArray(x.rows)&&x.rows.length>0);
+  return fallback?fallback.id:'';
 }
 
 function startFromMenu(){
+  const startId=getPreviewStartSceneId();
+  const si=startId?S.scenes.findIndex(x=>x.id===startId):-1;
+  if(si<0){toast('нет сцены для запуска');return;}
   document.getElementById('pl-menu').style.display='none';
   document.getElementById('pl-topbar').style.opacity='1';
   document.getElementById('pl-topbar').style.pointerEvents='all';
-  const startId=document.getElementById('menu-start-scene').value||S.menu.startScene;
-  const si=startId?S.scenes.findIndex(x=>x.id===startId):0;
-  runScene(si>=0?si:0);
+  runScene(si);
 }
 
 function runScene(si){
@@ -904,7 +912,7 @@ function runScene(si){
   document.getElementById('pl-choices').classList.remove('show');
   document.getElementById('pl-ending').classList.remove('show');
   document.getElementById('pl-continue').style.opacity='0';
-  
+  document.getElementById('player').classList.add('visible');
   advanceDialog();
 }
 
@@ -1110,8 +1118,7 @@ function openExport(){
   document.getElementById('modal-overlay').classList.add('show');
 }
 function buildExportHTML(){
-  const data=btoa(unescape(encodeURIComponent(JSON.stringify(S))));
-  // get computed CSS vars for theming
+  const data=JSON.stringify(S).replace(/</g,'\\u003c');
   const cs=getComputedStyle(document.documentElement);
   const vars=['--dlg-bg','--dlg-border','--dlg-text','--dlg-speaker-color','--dlg-font','--dlg-size','--menu-bg','--menu-accent','--menu-text','--bg'];
   const customVars=vars.map(v=>`${v}:${cs.getPropertyValue(v).trim()};`).join('\n  ');
@@ -1185,29 +1192,30 @@ html,body{height:100%;overflow:hidden;background:#000}
   <div class="end-label">КОНЕЦ</div>
   <div class="end-title" id="end-title"></div>
   <div class="end-text" id="end-text"></div>
-  <button class="end-btn" onclick="closePlayer()">В главное меню</button>
+  <button class="end-btn" onclick="location.reload()">В главное меню</button>
 </div>
+<script id="nv-data" type="application/json">${data}</script>
 <script>
-const S=JSON.parse(decodeURIComponent(escape(atob('${data}'))));
+const S=JSON.parse(document.getElementById('nv-data').textContent);
 let PL={rows:[],idx:0,typing:false,fullText:'',typingTimer:null,auto:false,autoTimer:null,currentBg:'',currentMusic:'',audio:null,sceneId:''};
+
+function firstPlayableSceneId(){
+  if(S.menu && S.menu.startScene) return S.menu.startScene;
+  const fallback=S.scenes.find(x=>Array.isArray(x.rows)&&x.rows.length>0);
+  return fallback?fallback.id:'';
+}
+
 function startFromMenu(){
-  const pickStartScene = () => {
-    if (S.menu && S.menu.startScene) return S.menu.startScene;
-    const fallback = S.scenes.find(x => Array.isArray(x.rows) && x.rows.length > 0);
-    return fallback ? fallback.id : '';
-  };
-  const startId = pickStartScene();
-  const si = startId ? S.scenes.findIndex(x => x.id === startId) : -1;
-  if(si < 0){
-    alert('Нет сцен для запуска. Добавь хотя бы одну сцену с репликами.');
-    return;
-  }
+  const startId=document.getElementById('menu-start-scene')?.value || firstPlayableSceneId();
+  const si=startId?S.scenes.findIndex(x=>x.id===startId):-1;
+  if(si<0){alert('Нет сцены для запуска');return;}
   document.getElementById('pl-menu').style.display='none';
   document.getElementById('pl-topbar').style.opacity='1';
   document.getElementById('pl-topbar').style.pointerEvents='all';
   runScene(si);
 }
-function runScene(si){const sc=S.scenes[si];if(!sc){alert('Сцена не найдена');return}PL.rows=sc.rows;PL.idx=-1;PL.sceneId=sc.id;PL.typing=false;clearTimeout(PL.typingTimer);clearTimeout(PL.autoTimer);document.getElementById('pl-dialog').style.display='none';document.getElementById('pl-choices').classList.remove('show');document.getElementById('pl-ending').classList.remove('show');document.getElementById('pl-continue').style.opacity='0';advanceDialog()}
+function runScene(si){const sc=S.scenes[si];if(!sc){alert('Сцена не найдена');return}PL.rows=sc.rows;PL.idx=-1;PL.sceneId=sc.id;PL.typing=false;clearTimeout(PL.typingTimer);clearTimeout(PL.autoTimer);document.getElementById('pl-dialog').style.display='none';document.getElementById('pl-choices').classList.remove('show');document.getElementById('pl-ending').classList.remove('show');document.getElementById('pl-continue').style.opacity='0';document.getElementById('player').classList.add('visible');advanceDialog()}
+
 function closePlayer(){
   clearTimeout(PL.typingTimer);clearTimeout(PL.autoTimer);
   PL.auto=false;
@@ -1221,8 +1229,8 @@ function closePlayer(){
   document.getElementById('pl-choices').classList.remove('show');
   document.getElementById('pl-ending').classList.remove('show');
 }
-function advanceDialog(){if(document.getElementById('pl-choices').classList.contains('show'))return;if(document.getElementById('pl-ending').classList.contains('show'))return;clearTimeout(PL.autoTimer);if(PL.typing){clearTimeout(PL.typingTimer);document.getElementById('pl-text').textContent=PL.fullText;PL.typing=false;document.getElementById('pl-continue').style.opacity='1';if(PL.auto)scheduleAuto();return}PL.idx++;if(PL.idx>=PL.rows.length){location.reload();return}const r=PL.rows[PL.idx];if(r.type==='anim'){runAnim(r);return}if(r.type==='choice'){showChoice(r);return}if(r.type==='ending'){showEnding(r);return}if(r.type==='dialog'){applyEnv(r);typeText(r)}}
-function applyEnv(r){if(r.bg){const b=S.backgrounds.find(x=>x.name===r.bg);const url=b?b.link:'';if(url!==PL.currentBg){PL.currentBg=url;const el=document.getElementById('pl-bg');el.style.backgroundImage=url?'url(\''+url+'\')':'none';document.getElementById('pl-bg-color').style.opacity=url?'0':'1'}}if(r.music){const m=S.music.find(x=>x.name===r.music);if(m&&m.link&&m.link!==PL.currentMusic){PL.currentMusic=m.link;if(PL.audio)PL.audio.pause();PL.audio=new Audio(m.link);PL.audio.loop=true;PL.audio.volume=0.55;PL.audio.play().catch(e=>console.warn(e))}}const layer=document.getElementById('pl-sprites');layer.innerHTML='';if(r.speaker&&r.sprite){const ch=S.characters.find(x=>x.name===r.speaker);if(ch){const sp=ch.sprites.find(x=>x.name===r.sprite);if(sp&&sp.link)addSpriteEl(layer,sp.link,r.spritePos||'center',ch.name)}}if(r.sprite2&&r.sprite2.includes(':')){const[cn,sn]=r.sprite2.split(':');const ch=S.characters.find(x=>x.name===cn);if(ch){const sp=ch.sprites.find(x=>x.name===sn);if(sp&&sp.link)addSpriteEl(layer,sp.link,r.sprite2pos||'right',cn)}}}
+function advanceDialog(){if(document.getElementById('pl-choices').classList.contains('show'))return;if(document.getElementById('pl-ending').classList.contains('show'))return;clearTimeout(PL.autoTimer);if(PL.typing){clearTimeout(PL.typingTimer);document.getElementById('pl-text').textContent=PL.fullText;PL.typing=false;document.getElementById('pl-continue').style.opacity='1';if(PL.auto)scheduleAuto();return}PL.idx++;if(PL.idx>=PL.rows.length){closePlayer();return}const r=PL.rows[PL.idx];if(r.type==='anim'){runAnim(r);return}if(r.type==='choice'){showChoice(r);return}if(r.type==='ending'){showEnding(r);return}if(r.type==='dialog'){applyEnv(r);typeText(r)}}
+function applyEnv(r){if(r.bg){const b=S.backgrounds.find(x=>x.name===r.bg);const url=b?b.link:'';if(url!==PL.currentBg){PL.currentBg=url;const el=document.getElementById('pl-bg');el.style.backgroundImage = url ? "url('" + url + "')" : 'none';document.getElementById('pl-bg-color').style.opacity=url?'0':'1'}}if(r.music){const m=S.music.find(x=>x.name===r.music);if(m&&m.link&&m.link!==PL.currentMusic){PL.currentMusic=m.link;if(PL.audio)PL.audio.pause();PL.audio=new Audio(m.link);PL.audio.loop=true;PL.audio.volume=0.55;PL.audio.play().catch(e=>console.warn(e))}}const layer=document.getElementById('pl-sprites');layer.innerHTML='';if(r.speaker&&r.sprite){const ch=S.characters.find(x=>x.name===r.speaker);if(ch){const sp=ch.sprites.find(x=>x.name===r.sprite);if(sp&&sp.link)addSpriteEl(layer,sp.link,r.spritePos||'center',ch.name)}}if(r.sprite2&&r.sprite2.includes(':')){const[cn,sn]=r.sprite2.split(':');const ch=S.characters.find(x=>x.name===cn);if(ch){const sp=ch.sprites.find(x=>x.name===sn);if(sp&&sp.link)addSpriteEl(layer,sp.link,r.sprite2pos||'right',cn)}}}
 function addSpriteEl(layer,url,pos,name){const w=document.createElement('div');w.className='pl-sprite-wrap pos-'+pos;const img=document.createElement('img');img.src=url;img.alt=name||'';w.appendChild(img);layer.appendChild(w)}
 function typeText(r){const sp=document.getElementById('pl-speaker');const tx=document.getElementById('pl-text');const co=document.getElementById('pl-continue');const ch=r.speaker?S.characters.find(x=>x.name===r.speaker):null;sp.textContent=r.speaker||'';sp.style.color=ch?.color||'var(--dlg-speaker-color)';tx.textContent='';co.style.opacity='0';document.getElementById('pl-dialog').style.display='block';PL.fullText=r.text||'';PL.typing=true;let i=0;const tick=()=>{if(i<PL.fullText.length){tx.textContent+=PL.fullText[i++];PL.typingTimer=setTimeout(tick,25)}else{PL.typing=false;co.style.opacity='1';if(PL.auto)scheduleAuto()}};tick()}
 function showChoice(r){const el=document.getElementById('pl-choices');el.innerHTML='';r.choices.forEach(ch=>{const btn=document.createElement('button');btn.className='ch-btn';btn.textContent=ch.text||'...';btn.onclick=()=>{el.classList.remove('show');if(ch.gotoScene){const si=S.scenes.findIndex(x=>x.id===ch.gotoScene);if(si>=0){runScene(si);return}}advanceDialog()};el.appendChild(btn)});el.classList.add('show')}
@@ -1230,7 +1238,7 @@ function showEnding(r){document.getElementById('end-title').textContent=r.title|
 function runAnim(r){const dur=r.duration||1000;const overlay=document.getElementById('pl-bg-overlay');const effect=r.effect||'fade';const color=r.color||'#000';if(effect==='fade'){overlay.style.background=color;overlay.style.transition='none';overlay.style.opacity='0';setTimeout(()=>{overlay.style.transition='opacity '+(dur/2000)+'s';overlay.style.opacity='1';setTimeout(()=>{overlay.style.opacity='0';setTimeout(()=>advanceDialog(),dur/2)},dur/2)},50)}else if(effect==='flash'){overlay.style.background=color;overlay.style.transition='none';overlay.style.opacity='1';setTimeout(()=>{overlay.style.transition='opacity '+(dur/1000)+'s';overlay.style.opacity='0';setTimeout(()=>advanceDialog(),dur)},50)}else if(effect==='shake'){const pl=document.body;pl.style.transition='none';let t=0;const sh=setInterval(()=>{pl.style.transform='translate('+(Math.random()-.5)*10+'px,'+(Math.random()-.5)*6+'px)';t+=50;if(t>=dur){clearInterval(sh);pl.style.transform='none';advanceDialog()}},50)}else if(effect==='text'){overlay.style.background='rgba(0,0,0,.95)';overlay.style.opacity='1';overlay.style.transition='none';overlay.style.cssText+='display:flex;align-items:center;justify-content:center;';overlay.innerHTML='<div style="font-family:Cinzel,serif;font-size:28px;font-weight:300;color:'+color+';letter-spacing:6px;text-align:center;opacity:0;transition:opacity .5s">'+r.text+'<\\/div>';setTimeout(()=>{overlay.querySelector('div').style.opacity='1';setTimeout(()=>{overlay.querySelector('div').style.opacity='0';setTimeout(()=>{overlay.style.opacity='0';overlay.innerHTML='';overlay.style.display='';advanceDialog()},600)},dur-600)},50)}else if(effect==='blackout'){overlay.style.background=color;overlay.style.transition='opacity '+(dur/2000)+'s';overlay.style.opacity='1';setTimeout(()=>{overlay.style.opacity='0';setTimeout(()=>advanceDialog(),dur/2)},dur/2)}else{advanceDialog()}}
 function toggleAuto(){PL.auto=!PL.auto;document.getElementById('btn-auto').classList.toggle('on',PL.auto);if(PL.auto&&!PL.typing)scheduleAuto();else clearTimeout(PL.autoTimer)}
 function scheduleAuto(){clearTimeout(PL.autoTimer);PL.autoTimer=setTimeout(()=>{if(PL.auto)advanceDialog()},2400)}
-function skipDialog(){clearTimeout(PL.typingTimer);clearTimeout(PL.autoTimer);closePlayer()}
+function skipDialog(){clearTimeout(PL.typingTimer);clearTimeout(PL.autoTimer);location.reload()}
 document.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'||e.key==='ArrowRight')advanceDialog();});
 // apply menu bg
 (()=>{const m=document.getElementById('pl-menu');const bg='${S.menu.bgUrl||''}';if(bg)m.style.background="url('"+bg+"') center/cover, var(--menu-bg)"})();
